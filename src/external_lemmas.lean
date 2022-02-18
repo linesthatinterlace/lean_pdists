@@ -1,5 +1,6 @@
 import tactic
 import data.real.basic
+import data.set.prod
 import algebra.big_operators.finprod
 
 
@@ -72,3 +73,41 @@ theorem finsum_mem_nonneg {α : Sort*} {M : Type*} {s : set α} [ordered_add_com
 0 ≤ ∑ᶠ i ∈ s, f i := finsum_mem_induction _ (le_refl _) (λ _ _ _ _, add_nonneg (by assumption) (by assumption)) hf
 
 theorem finsum_range_succ {β : Type*} [add_comm_monoid β] (f : ℕ → β) (n : ℕ) : ∑ᶠ i ∈ Ico 0 (n + 1), f i = ∑ᶠ i ∈ set.Ico 0 n, f i + f n := by rw [nat_ico_range_succ_eq_union, finsum_mem_insert _ (nat_ico_range_nmem _) (nat_ico_range_finite _), add_comm]
+
+lemma function.support_mul₂ {α : Type*} {β : Type*} {R : Type*} [semiring R] [no_zero_divisors R] (f : α → R) (g : β → R) 
+: function.support (λ (xy : α × β), f xy.fst * g xy.snd) = ((function.support f) ×ˢ (function.support g)) :=
+begin
+  ext,
+  simp only [set.mem_inter_eq, function.support_mul, set.mem_prod, function.mem_support]
+end
+
+lemma function.support_mul_finite_of_supports_finite {α : Type*} {β : Type*} {R : Type*} [semiring R] [no_zero_divisors R] {f : α → R} {g : β → R} (hf : (function.support f).finite) (hg : (function.support g).finite)
+: (function.support (λ (xy : α × β), f xy.fst * g xy.snd)).finite :=
+begin
+  rw function.support_mul₂,
+  apply set.finite.prod hf hg
+end
+
+lemma finsum_sum_mul {α : Type*} {β : Type*} {R : Type*} [semiring R] [no_zero_divisors R] {f : α → R} {g : β → R} (hf : (function.support f).finite) (hg : (function.support g).finite) : ∑ᶠ (x : α) (y : β), f x * g y = (∑ᶠ x : α, f x) * (∑ᶠ y : β, g y) :=
+begin
+  rw finsum_mul _ _ hf,
+  rw finsum_congr, intro _,
+  rw mul_finsum _ _ hg
+end
+
+lemma finsum_sum_mul_curry {α : Type*} {β : Type*} {R : Type*} [semiring R] [no_zero_divisors R] {f : α → R} {g : β → R} (hf : (function.support f).finite) (hg : (function.support g).finite) : ∑ᶠ xy : (α × β), f xy.fst * g xy.snd = (∑ᶠ x : α, f x) * (∑ᶠ y : β, g y) :=
+begin
+  rw finsum_curry _ (function.support_mul_finite_of_supports_finite hf hg),
+  rw finsum_sum_mul hf hg
+end
+
+lemma finsum_sum_mul_curry_ish_ish {α : Type*} {β : Type*} {M : Type*} [add_comm_monoid M] {f : α → β → M} (hf : (function.support f).finite) : ∑ᶠ xy, f xy = ∑ᶠ yx, (λ yx : β × α, f (yx.snd, yx.fst)) yx :=
+begin
+  rw finsum_eq_of_bijective, rotate, rotate,library_search,
+end
+
+lemma finsum_sum_mul_curry_ish {α : Type*} {β : Type*} {M : Type*} [add_comm_monoid M] {f : α → β → M} (hf : (function.support f).finite) : ∑ᶠ (x : α) (y : β), f x y = ∑ᶠ (y : β) (x : α) , f x y :=
+begin
+  rw finsum_sum_mul_curry_ish_ish hf,
+  rw ← finsum_curry (function.curry f),
+end

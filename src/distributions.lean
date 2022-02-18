@@ -6,15 +6,15 @@ open set set.finite
 
 open_locale classical big_operators
 
-structure fspm (Ω : Type*) :=
+structure findist (Ω : Type*) :=
 (pr : Ω → ℝ)
 (finite : (function.support pr).finite)
 (nonneg : ∀ x, 0 ≤ pr x)
 (normal : ∑ᶠ x, pr x = 1)
 
-variables {Ω : Type*} (σ : fspm Ω)
+namespace findist
 
-namespace fspm
+variables {Ω : Type*} (σ : findist Ω)
 
 def support : set Ω := function.support σ.pr
 
@@ -63,7 +63,7 @@ begin
   refl
 end
 
-lemma Pr_empty_eq_zero (σ : fspm Ω) : σ.Pr ∅ = 0 :=
+lemma Pr_empty_eq_zero (σ : findist Ω) : σ.Pr ∅ = 0 :=
 begin
   have h := σ.Pr_additive (empty_disjoint _),
   rwa [set.union_empty, self_eq_add_left] at h,
@@ -81,9 +81,9 @@ begin
   }
 end
 
-lemma Pr_whole_eq_one (σ : fspm Ω) : σ.Pr univ = 1 := σ.Pr_normal
+lemma Pr_whole_eq_one (σ : findist Ω) : σ.Pr univ = 1 := σ.Pr_normal
 
-lemma Pr_mono (σ : fspm Ω) : monotone σ.Pr :=
+lemma Pr_mono (σ : findist Ω) : monotone σ.Pr :=
 begin
   intros A B hAB,
   have h := σ.Pr_additive (disjoint_diff),
@@ -92,27 +92,27 @@ begin
   apply σ.Pr_nonneg
 end
 
-lemma Pr_le_one (σ : fspm Ω) (A : set Ω) : σ.Pr A ≤ 1 := 
+lemma Pr_le_one (σ : findist Ω) (A : set Ω) : σ.Pr A ≤ 1 := 
 begin
   rw ← σ.Pr_normal,
   apply σ.Pr_mono (subset_univ _)
 end
 
-lemma Pr_complement_eq_one_sub (σ : fspm Ω) (A : set Ω) : σ.Pr Aᶜ = 1 - σ.Pr A :=
+lemma Pr_complement_eq_one_sub (σ : findist Ω) (A : set Ω) : σ.Pr Aᶜ = 1 - σ.Pr A :=
   by {  rw [← σ.Pr_normal, ←union_compl_self A, Pr_additive, add_tsub_cancel_left],
         rw [set.disjoint_iff_inter_eq_empty, inter_compl_self]}
 
-lemma Pr_total_pair_compl (σ : fspm Ω) (A B : set Ω) : σ.Pr A = σ.Pr (A ∩ B) + σ.Pr (A ∩ Bᶜ) := by rw [← σ.Pr_additive (disjoint_inter_inter_compl _ _), inter_union_compl]
+lemma Pr_total_pair_compl (σ : findist Ω) (A B : set Ω) : σ.Pr A = σ.Pr (A ∩ B) + σ.Pr (A ∩ Bᶜ) := by rw [← σ.Pr_additive (disjoint_inter_inter_compl _ _), inter_union_compl]
 
 /- 
 TODO: Finite version of this pair lemma.
 -/
 
-lemma Pr_total_pair_diff (σ : fspm Ω) (A B : set Ω) : σ.Pr A = σ.Pr (A ∩ B) + σ.Pr (A \ B) := by {rw [diff_eq, Pr_total_pair_compl]}
+lemma Pr_total_pair_diff (σ : findist Ω) (A B : set Ω) : σ.Pr A = σ.Pr (A ∩ B) + σ.Pr (A \ B) := by {rw [diff_eq, Pr_total_pair_compl]}
 
-lemma Pr_diff_eq_sub_Pr_inter (σ : fspm Ω) (A B : set Ω) : σ.Pr (A \ B) = σ.Pr A - σ.Pr (A ∩ B) := by rw [σ.Pr_total_pair_diff A, add_tsub_cancel_left]
+lemma Pr_diff_eq_sub_Pr_inter (σ : findist Ω) (A B : set Ω) : σ.Pr (A \ B) = σ.Pr A - σ.Pr (A ∩ B) := by rw [σ.Pr_total_pair_diff A, add_tsub_cancel_left]
 
-lemma Pr_union_inter (σ : fspm Ω) (A B : set Ω)
+lemma Pr_union_inter (σ : findist Ω) (A B : set Ω)
   : σ.Pr (A ∪ B) + σ.Pr (A ∩ B) = σ.Pr A + σ.Pr B :=
 begin
   rw union_eq_diff_union_diff_union_inter,
@@ -120,20 +120,20 @@ begin
   ring
 end
 
-lemma Pr_union_eq_inc_exc (σ : fspm Ω) (A B : set Ω)
+lemma Pr_union_eq_inc_exc (σ : findist Ω) (A B : set Ω)
   : σ.Pr (A ∪ B) = σ.Pr A + σ.Pr B - σ.Pr (A ∩ B) :=
 begin
   rw eq_sub_iff_add_eq,
   apply σ.Pr_union_inter
 end
 
-lemma Pr_inter_le_left (σ : fspm Ω) (A B : set Ω)
+lemma Pr_inter_le_left (σ : findist Ω) (A B : set Ω)
   : σ.Pr (A ∩ B) ≤ σ.Pr A := σ.Pr_mono (inter_subset_left _ _)
 
-lemma Pr_inter_le_right (σ : fspm Ω) (A B : set Ω)
+lemma Pr_inter_le_right (σ : findist Ω) (A B : set Ω)
   : σ.Pr (A ∩ B) ≤ σ.Pr B := σ.Pr_mono (inter_subset_right _ _)
 
-lemma Pr_subadditive (σ : fspm Ω) (A B : set Ω) : σ.Pr (A ∪ B) ≤ σ.Pr A + σ.Pr B := by { rw [σ.Pr_union_eq_inc_exc, sub_le_self_iff], apply σ.Pr_nonneg }
+lemma Pr_subadditive (σ : findist Ω) (A B : set Ω) : σ.Pr (A ∪ B) ≤ σ.Pr A + σ.Pr B := by { rw [σ.Pr_union_eq_inc_exc, sub_le_self_iff], apply σ.Pr_nonneg }
 
 lemma Pr_finitely_subadditive  (f : ℕ → set Ω) (n : ℕ) : σ.Pr (⋃ i ∈ Ico 0 n, f i) ≤ ∑ᶠ i ∈ Ico 0 n, σ.Pr (f i) :=
 begin
@@ -146,9 +146,9 @@ begin
 end
 
 
-noncomputable def Pr_cond (σ : fspm Ω) (A B : set Ω) : ℝ := σ.Pr (A ∩ B) / σ.Pr B
+noncomputable def Pr_cond (σ : findist Ω) (A B : set Ω) : ℝ := σ.Pr (A ∩ B) / σ.Pr B
 
-lemma Pr_cond_mul_eq_Pr_inter (σ : fspm Ω) (A B : set Ω) 
+lemma Pr_cond_mul_eq_Pr_inter (σ : findist Ω) (A B : set Ω) 
   : σ.Pr (A ∩ B) = σ.Pr_cond A B * σ.Pr B := 
 begin
   by_cases hB : (σ.Pr B = 0),
@@ -161,7 +161,7 @@ begin
   { rw [Pr_cond, div_mul_cancel _ hB], },
 end
 
-lemma Pr_cond_total_pair (σ : fspm Ω) (A B : set Ω) 
+lemma Pr_cond_total_pair (σ : findist Ω) (A B : set Ω) 
   : σ.Pr A = σ.Pr_cond A B * σ.Pr B + σ.Pr_cond A Bᶜ * σ.Pr Bᶜ := 
   by rw [σ.Pr_total_pair_compl _ B, Pr_cond_mul_eq_Pr_inter, Pr_cond_mul_eq_Pr_inter]
 
@@ -169,17 +169,17 @@ lemma Pr_cond_total_pair (σ : fspm Ω) (A B : set Ω)
 TODO: Finite version of this pair lemma.
 -/
 
-lemma Pr_bayes {σ : fspm Ω} (A B : set Ω)
+lemma Pr_bayes {σ : findist Ω} (A B : set Ω)
   : σ.Pr_cond A B = (σ.Pr_cond B A * σ.Pr A) / σ.Pr B  := 
 begin
   rw [Pr_cond, set.inter_comm, Pr_cond_mul_eq_Pr_inter],
 end
 
-lemma Pr_total_bayes {σ : fspm Ω} (A B : set Ω)
+lemma Pr_total_bayes {σ : findist Ω} (A B : set Ω)
   : σ.Pr_cond A B = (σ.Pr_cond B A * σ.Pr A) / (σ.Pr_cond B A * σ.Pr A + σ.Pr_cond B Aᶜ * σ.Pr Aᶜ) := by rw [Pr_bayes, Pr_cond_total_pair _ B A]
 
 
-lemma Pr_cond_nonneg {σ : fspm Ω} {B : set Ω} (h : σ.Pr B ≠ 0 ) : ∀ (A : set Ω), 0 ≤ σ.Pr_cond A B :=
+lemma Pr_cond_nonneg {σ : findist Ω} {B : set Ω} (h : σ.Pr B ≠ 0 ) : ∀ (A : set Ω), 0 ≤ σ.Pr_cond A B :=
 begin
   intros A,
   unfold Pr_cond,
@@ -191,9 +191,9 @@ begin
   exact ⟨Pr_nonneg σ B, h.symm⟩
 end
 
-lemma Pr_cond_normal {σ : fspm Ω} {B : set Ω} (h : σ.Pr B ≠ 0) : σ.Pr_cond univ B = 1 := by rw [Pr_cond, set.univ_inter, div_self h]
+lemma Pr_cond_normal {σ : findist Ω} {B : set Ω} (h : σ.Pr B ≠ 0) : σ.Pr_cond univ B = 1 := by rw [Pr_cond, set.univ_inter, div_self h]
 
-lemma Pr_cond_σ_add {σ : fspm Ω} {B : set Ω} (h : σ.Pr B ≠ 0) : ∀ (S T : set Ω), disjoint S T → σ.Pr_cond (S ∪ T) B = σ.Pr_cond S B + σ.Pr_cond T B :=
+lemma Pr_cond_σ_add {σ : findist Ω} {B : set Ω} (h : σ.Pr B ≠ 0) : ∀ (S T : set Ω), disjoint S T → σ.Pr_cond (S ∪ T) B = σ.Pr_cond S B + σ.Pr_cond T B :=
 begin
   intros _ _ _,
   unfold Pr_cond,
@@ -202,11 +202,6 @@ begin
   apply disjoint_of_subset_right (set.inter_subset_left _ _),
   assumption
 end
-
-
-
-
-end fspm
 
 noncomputable def dirac_pr (ω x : Ω) : ℝ := if x = ω then 1 else 0
 
@@ -230,11 +225,58 @@ lemma dirac_nonneg (ω x : Ω) : 0 ≤ dirac_pr ω x :=
 lemma dirac_normal (ω : Ω) : ∑ᶠ (x : Ω), dirac_pr ω x = 1 :=
   by { rw finsum_eq_single _ _ (dirac_nω _), apply dirac_ω }
 
-noncomputable def dirac (ω : Ω) : fspm Ω := 
+noncomputable def dirac (ω : Ω) : findist Ω := 
 ⟨dirac_pr ω,
 dirac_finite _,
 dirac_nonneg _,
 dirac_normal _⟩
+
+variables {Ξ : Type*} (θ : findist Ξ) 
+
+def product_pr : Ω × Ξ → ℝ
+  := λ xy, σ.pr xy.fst * θ.pr xy.snd
+
+lemma product_pr_eq (xy : Ω × Ξ) : σ.product_pr θ xy = σ.pr xy.fst * θ.pr xy.snd := rfl
+
+lemma product_finite {Ξ : Type*} (θ : findist Ξ) : (function.support (σ.product_pr θ)).finite := (function.support_mul_finite_of_supports_finite (σ.finite) (θ.finite))
+
+lemma product_nonneg {Ξ : Type*} (θ : findist Ξ) : ∀ (xy : Ω × Ξ), 0 ≤ σ.product_pr θ xy :=
+begin
+  intro xy, rw product_pr_eq,
+  apply mul_nonneg (σ.nonneg _) (θ.nonneg _)
+end
+
+lemma product_normal {Ξ : Type*} (θ : findist Ξ) : ∑ᶠ (xy : Ω × Ξ), σ.product_pr θ xy = 1 := 
+begin
+  rw [finsum_congr (product_pr_eq _ _), finsum_sum_mul (σ.finite) (θ.finite),
+  σ.normal, θ.normal, mul_one]
+end
+
+def product {Ξ : Type*} (θ : findist Ξ) : findist (Ω × Ξ)
+:= ⟨σ.product_pr θ, σ.product_finite θ, σ.product_nonneg θ, σ.product_normal θ⟩
+
+-- Uniform
+-- "Map"
+-- "Concat"
+-- Bind?
+
+end findist
+
+
+structure rvar (Ω : Type*) (α : Type*) := 
+(map : Ω → α)
+(σ : findist Ω)
+
+
+namespace rvar
+
+variables {Ω : Type*} {α : Type*}
+
+noncomputable def Pr (X : rvar Ω α) (T : set α) : ℝ := X.σ.Pr (X.map⁻¹' T)
+
+noncomputable def pure (Ω : Type*) {α : Type*} (b : α) : rvar α α := ⟨id, findist.dirac b⟩
+
+end rvar
 
 
 
